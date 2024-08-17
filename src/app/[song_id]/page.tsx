@@ -30,6 +30,7 @@ interface Album {
   tracks: {
     items: AlbumTrack[];
   };
+  label: string;
 }
 function ColorPicker({ imageUrl }: { imageUrl: string }) {
   const [colors, setColors] = useState<string[]>([]);
@@ -54,7 +55,7 @@ function ColorPicker({ imageUrl }: { imageUrl: string }) {
       {colors.map((color, index) => (
         <div
           key={index}
-          className="w-8 h-8 rounded-full"
+          className="w-8 h-8 rounded-full print:border print:border-gray-300"
           style={{ backgroundColor: color }}
         ></div>
       ))}
@@ -186,20 +187,21 @@ export default function SongPage() {
                 )}
               </p>
             </div>
-            <div>
+            {/* <div>
               <p className="text-gray-500">TRACKS</p>
               <p className="font-semibold">{track.album.total_tracks}</p>
+            </div> */}
+            <div>
+              <p className="text-gray-500">LABEL</p>
+              <p className="font-semibold">{album.label}</p>
             </div>
             <ColorPicker imageUrl={track.album.images[0].url} />
           </div>
-          <div className="grid grid-cols-1 gap-1 mb-4 max-h-48 overflow-y-auto">
+          <div className="w-full h-[2px] bg-gray-200 mb-4" />
+          <div className="grid grid-cols-4 gap-2 mb-4">
             {album.tracks.items.map((albumTrack, index) => (
-              <p
-                key={index}
-                className="text-xs bg-gray-100 p-1 rounded flex justify-between"
-              >
-                <span>{albumTrack.name}</span>
-                <span>{formatDuration(albumTrack.duration_ms)}</span>
+              <p key={index} className="text-[12px] uppercase rounded">
+                {albumTrack.name}
               </p>
             ))}
           </div>
