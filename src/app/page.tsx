@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LoadingDots } from "@/components/loading-dots";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Music, Headphones, Radio } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,6 +22,9 @@ export default function Home() {
     if (searchQuery) {
       setQuery(searchQuery);
       handleSearch(searchQuery);
+    } else {
+      setQuery("");
+      setSearchResults([]);
     }
   }, [searchParams]);
 
@@ -36,152 +38,161 @@ export default function Home() {
       if (!response.ok) throw new Error("Search failed");
       const results = await response.json();
       setSearchResults(results);
-      // Update the URL with the search query
       router.push(`/?q=${encodeURIComponent(searchQuery)}`, { scroll: false });
     } catch (error) {
       console.error("Search failed:", error);
     }
     setIsSearching(false);
   };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSearch();
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-12"
-      >
-        <h1 className="text-5xl font-bold text-center mb-4">Sonolise</h1>
-        <p className="text-xl text-center text-gray-300 mb-12">
-          Transform your favorite songs into stunning visuals
-        </p>
-
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-          className="max-w-2xl mx-auto mb-16"
-        >
-          <div className="flex space-x-2 bg-white/10 p-2 rounded-lg">
-            <Input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Search for a song..."
-              className="flex-grow bg-transparent text-white placeholder-gray-400 border-none focus:ring-0"
-            />
-            <Button
-              onClick={() => handleSearch()}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              {isSearching ? (
-                <LoadingDots color="white" />
-              ) : (
-                <>
-                  <Search className="h-4 w-4 mr-2" />
-                  Search
-                </>
-              )}
-            </Button>
-          </div>
-        </motion.div>
-
-        <AnimatePresence>
-          {searchResults.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-4xl mx-auto"
-            >
-              <h2 className="text-2xl font-bold mb-4">Search Results</h2>
-              <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {searchResults.map((track: any) => (
-                  <motion.li
-                    key={track.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-white/10 p-4 rounded-lg"
-                  >
-                    <Link
-                      href={`/${track.id}`}
-                      className="flex items-center space-x-4"
-                    >
-                      <Image
-                        src={track.album.images[0].url}
-                        alt={track.name}
-                        width={60}
-                        height={60}
-                        className="rounded"
-                      />
-                      <div>
-                        <h3 className="font-semibold">{track.name}</h3>
-                        <p className="text-gray-400">{track.artists[0].name}</p>
-                      </div>
-                    </Link>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {searchResults.length === 0 && !isSearching && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="max-w-4xl mx-auto mt-16"
+    <div className="flex flex-col min-h-screen bg-white text-gray-900">
+      <main className="flex-grow">
+        <div className="container mx-auto px-4 py-12">
+          {/* Header Section */}
+          <motion.header
+            className="flex justify-between items-center py-6"
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
           >
-            <h2 className="text-3xl font-bold mb-8 text-center">
-              Discover the Magic of Sonolise
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<Music className="h-12 w-12" />}
-                title="Visualize Your Music"
-                description="Turn your favorite tracks into stunning visual art pieces."
-              />
-              <FeatureCard
-                icon={<Headphones className="h-12 w-12" />}
-                title="Enhance Your Experience"
-                description="See your music in a whole new way, enhancing your listening experience."
-              />
-              <FeatureCard
-                icon={<Radio className="h-12 w-12" />}
-                title="Share Your Vibes"
-                description="Create and share unique visuals for your playlists and favorite songs."
-              />
+            <Link href="/" className="text-gray-700 hover:text-black mr-4">
+              <h1 className="text-4xl font-bold">Sonolise</h1>
+            </Link>
+            <div>
+              <Link
+                href="/login"
+                className="text-gray-700 hover:text-black mr-4"
+              >
+                Log in
+              </Link>
+              <Button className="bg-black text-white">Create account</Button>
             </div>
-          </motion.div>
-        )}
-      </motion.div>
-    </main>
-  );
-}
+          </motion.header>
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="bg-white/5 p-6 rounded-lg text-center"
-    >
-      <div className="flex justify-center mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-400">{description}</p>
-    </motion.div>
+          {/* Search Section */}
+          <motion.section
+            className={`text-center ${
+              searchResults.length === 0 ? "mt-32" : "mt-12"
+            }`}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-5xl font-bold mb-4">
+              Find Your Favorite Album
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              Search for albums and transform them into beautiful frames with
+              details and Spotify codes.
+            </p>
+
+            {/* Search Bar */}
+            <motion.div
+              className="flex justify-center mb-8"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="flex space-x-2 p-4 rounded-lg w-2/3 bg-white shadow-lg">
+                <Input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Search for an album..."
+                  className="flex-grow bg-transparent text-gray-800 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Button
+                  onClick={() => handleSearch()}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 text-white px-4 py-2 rounded-r-lg"
+                >
+                  {isSearching ? (
+                    "Searching..."
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Search
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.section>
+
+          {/* Search Results Section */}
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.section
+                className="py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {searchResults.map((result: any) => (
+                    <motion.div
+                      key={result.album.id}
+                      className="overflow-hidden rounded-lg shadow-md"
+                      whileHover={{ scale: 1.05 }}
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Link href={`/${result.id}`}>
+                        <Image
+                          src={result.album.images[0].url}
+                          alt={result.name}
+                          width={400}
+                          height={300}
+                          className="object-cover w-full h-56"
+                        />
+                        <div className="p-4">
+                          <h4 className="font-semibold text-lg">
+                            {result.name}
+                          </h4>
+                          <p className="text-gray-500">
+                            {result.album.artists
+                              .map((artist: any) => artist.name)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+
+      <footer className="bg-gray-100 mt-auto">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              © 2024 Sonolise™. All Rights Reserved.
+            </p>
+            <div className="flex space-x-4">
+              <Link
+                href="/privacy"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Terms of Service
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
