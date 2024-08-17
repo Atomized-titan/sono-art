@@ -14,6 +14,11 @@ const nextConfig = {
         hostname: "i.scdn.co",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "scannables.scdn.co",
+        port: "",
+      },
     ],
   },
 };

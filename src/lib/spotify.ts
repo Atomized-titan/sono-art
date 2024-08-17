@@ -81,3 +81,18 @@ export async function getTrack(trackId: string) {
     throw error;
   }
 }
+
+export async function getAlbum(albumId: string) {
+  try {
+    const token = await getClientCredentialsToken();
+    const response = await axios.get(`${SPOTIFY_API_BASE}/albums/${albumId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error getting album:", error);
+    throw error;
+  }
+}

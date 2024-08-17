@@ -11,11 +11,26 @@ interface Track {
   artists: { name: string }[];
   album: {
     name: string;
-    images: { url: string }[];
+    images: { url: string; height: number; width: number }[];
     release_date: string;
+    total_tracks: number;
+    id: string;
   };
+  duration_ms: number;
+  uri: string;
 }
 
+interface AlbumTrack {
+  name: string;
+  duration_ms: number;
+}
+
+interface Album {
+  name: string;
+  tracks: {
+    items: AlbumTrack[];
+  };
+}
 function ColorPicker({ imageUrl }: { imageUrl: string }) {
   const [colors, setColors] = useState<string[]>([]);
 
@@ -47,16 +62,28 @@ function ColorPicker({ imageUrl }: { imageUrl: string }) {
   );
 }
 
-function Audiograph() {
+function formatDuration(ms: number): string {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = ((ms % 60000) / 1000).toFixed(0);
+  return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
+}
+
+function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
+  const backgroundColor = "ffffff"; // white background
+  const codeColor = "black"; // black code
+  const format = "png";
+
+  const url = `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${codeColor}/${size}/${uri}`;
+
   return (
-    <div className="flex items-end space-x-[2px] h-8 w-24">
-      {[...Array(12)].map((_, i) => (
-        <div
-          key={i}
-          className="w-[2px] bg-gray-400"
-          style={{ height: `${Math.random() * 100}%` }}
-        ></div>
-      ))}
+    <div className="">
+      <Image
+        src={url}
+        alt="Spotify Code"
+        width={size}
+        height={size / 4} // Spotify Codes are typically 4:1 ratio
+        layout="responsive"
+      />
     </div>
   );
 }
@@ -67,11 +94,12 @@ export default function SongPage() {
     ? params.song_id[0]
     : params.song_id;
   const [track, setTrack] = useState<Track | null>(null);
+  const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchTrack() {
+    async function fetchData() {
       if (typeof song_id !== "string") {
         console.error("Invalid song_id:", song_id);
         setError("Invalid song ID");
@@ -81,28 +109,30 @@ export default function SongPage() {
 
       setLoading(true);
       setError(null);
-      console.log("Fetching track with ID:", song_id); // Debug log
 
       try {
-        const response = await fetch(`/api/track/${song_id}`);
-        console.log("API response status:", response.status); // Debug log
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const trackResponse = await fetch(`/api/track/${song_id}`);
+        if (!trackResponse.ok) {
+          throw new Error(`HTTP error! status: ${trackResponse.status}`);
         }
-
-        const trackData = await response.json();
-        console.log("Received track data:", trackData); // Debug log
+        const trackData = await trackResponse.json();
         setTrack(trackData);
+
+        const albumResponse = await fetch(`/api/album/${trackData.album.id}`);
+        if (!albumResponse.ok) {
+          throw new Error(`HTTP error! status: ${albumResponse.status}`);
+        }
+        const albumData = await albumResponse.json();
+        setAlbum(albumData);
       } catch (error) {
-        console.error("Failed to fetch track:", error);
-        setError("Failed to load track data. Please try again.");
+        console.error("Failed to fetch data:", error);
+        setError("Failed to load data. Please try again.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTrack();
+    fetchData();
   }, [song_id]);
 
   if (loading) {
@@ -113,25 +143,27 @@ export default function SongPage() {
     );
   }
 
-  if (error || !track) {
+  if (error || !track || !album) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
-        <p className="text-black text-2xl">{error || "Track not found"}</p>
+        <p className="text-black text-2xl">{error || "Data not found"}</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 font-sans">
-      <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg overflow-hidden">
-        <Image
-          src={track.album.images[0].url}
-          alt={`${track.name} album cover`}
-          width={600}
-          height={600}
-          layout="responsive"
-          objectFit="cover"
-        />
+      <div className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="relative w-full" style={{ paddingTop: "90%" }}>
+          <Image
+            src={track.album.images[0].url}
+            alt={`${track.album.name} album cover`}
+            layout="fill"
+            objectFit="cover"
+            className="absolute top-0 left-0"
+          />
+        </div>
+
         <div className="p-6">
           <div className="flex justify-between items-center mb-4 text-xs uppercase tracking-wide">
             <div>
@@ -145,50 +177,42 @@ export default function SongPage() {
             </div>
             <div>
               <p className="text-gray-500">ALBUM LENGTH</p>
-              <p className="font-semibold">74:22</p>
+              <p className="font-semibold">
+                {formatDuration(
+                  album.tracks.items.reduce(
+                    (total, track) => total + track.duration_ms,
+                    0
+                  )
+                )}
+              </p>
             </div>
             <div>
-              <p className="text-gray-500">LABEL</p>
-              <p className="font-semibold">BPG, RVG, RCA</p>
+              <p className="text-gray-500">TRACKS</p>
+              <p className="font-semibold">{track.album.total_tracks}</p>
             </div>
             <ColorPicker imageUrl={track.album.images[0].url} />
           </div>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {[
-              "THE BEAUTIFUL & DAMNED",
-              "LEGEND",
-              "GOTDAMN",
-              "PRAY FOR ME",
-              "HIM & I",
-              "NO LESS",
-              "BUT A DREAM",
-              "THE PLAN",
-              "LEVIATHAN",
-              "SOBER",
-              "THATS A LOT",
-              "PICK ME UP",
-              "SUMMER IN DECEMBER",
-              "CHARLES BROWN",
-              "EAZY",
-              "LOVE IS GONE",
-            ].map((song, index) => (
-              <p key={index} className="text-xs bg-gray-100 p-1 rounded">
-                {song}
+          <div className="grid grid-cols-1 gap-1 mb-4 max-h-48 overflow-y-auto">
+            {album.tracks.items.map((albumTrack, index) => (
+              <p
+                key={index}
+                className="text-xs bg-gray-100 p-1 rounded flex justify-between"
+              >
+                <span>{albumTrack.name}</span>
+                <span>{formatDuration(albumTrack.duration_ms)}</span>
               </p>
             ))}
           </div>
-          <h2 className="text-3xl font-bold mb-2">{track.name}</h2>
-          <p className="text-xl text-gray-700 mb-4">
-            {track.artists.map((a) => a.name).join(", ")}
-          </p>
-          <div className="mt-4 flex justify-between items-end">
-            <Image
-              src="/spotify-logo.png"
-              alt="Spotify Logo"
-              width={100}
-              height={30}
-            />
-            <Audiograph />
+          <div className="mt-6 flex justify-between items-end">
+            <div className="flex-1">
+              <h2 className="text-3xl font-bold mb-1">{album.name}</h2>
+              <p className="text-xl text-gray-700">
+                {track.artists.map((a) => a.name).join(", ")}
+              </p>
+            </div>
+            <div className="flex items-end space-x-4">
+              <SpotifyCode uri={track.uri} size={400} />
+            </div>
           </div>
         </div>
       </div>
