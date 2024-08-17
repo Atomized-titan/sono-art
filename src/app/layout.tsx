@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Visurhythm",
+  title: "Sonolise",
   description: "Transform your favorite songs into stunning visuals",
 };
 

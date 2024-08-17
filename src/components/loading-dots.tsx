@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 
-export const LoadingDots = () => {
+export const LoadingDots = (props: React.ComponentPropsWithoutRef<"div">) => {
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-2" {...props}>
       {[0, 1, 2].map((index) => (
         <motion.div
           key={index}
