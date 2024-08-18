@@ -49,7 +49,7 @@ export default function SearchInput({
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4">
-      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 p-4 rounded-lg bg-white shadow-lg">
+      <div className="flex space-x-2 p-4 rounded-lg bg-white shadow-lg">
         <Input
           type="text"
           value={query}
@@ -60,14 +60,14 @@ export default function SearchInput({
         />
         <Button
           onClick={() => handleSearch()}
-          className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 text-white px-4 py-2 rounded-lg sm:rounded-l-none sm:rounded-r-lg"
+          className="sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 text-white px-4 py-2 rounded-lg sm:rounded-l-none sm:rounded-r-lg"
         >
           {isSearching ? (
             "Searching..."
           ) : (
             <>
-              <Search className="h-4 w-4 mr-2" />
-              Search
+              <Search className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:block">Search</span>
             </>
           )}
         </Button>

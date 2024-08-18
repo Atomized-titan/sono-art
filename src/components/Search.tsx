@@ -23,7 +23,7 @@ export default function SearchComponent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-5xl font-bold mb-4">Find Your Favorite Album</h2>
+        <h2 className="text-5xl font-bold mb-4">Frame Your Favorite Album</h2>
         <p className="text-xl text-gray-600 mb-8">
           Search for albums and transform them into beautiful frames with
           details and Spotify codes.
