@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { useParams } from "next/navigation";
+import EditPanel from "@/components/EditPanel";
 import { LoadingDots } from "@/components/loading-dots";
-import ColorThief from "colorthief";
-import html2canvas from "html2canvas";
-import { Button } from "@/components/ui/button";
-import { Download, Share2 } from "lucide-react";
-import { handleDownload, handleShare } from "@/lib/image-utils";
 import ShareComponent from "@/components/social-share";
+import { Button } from "@/components/ui/button";
+import ColorThief from "colorthief";
+import { AnimatePresence, motion } from "framer-motion";
+import { Edit, X } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export interface Track {
   name: string;
+  explicit: boolean;
+  popularity: number;
   artists: { name: string }[];
   album: {
     name: string;
@@ -37,7 +38,13 @@ export interface Album {
   };
   label: string;
 }
-function ColorPicker({ imageUrl }: { imageUrl: string }) {
+function ColorPicker({
+  imageUrl,
+  numColors,
+}: {
+  imageUrl: string;
+  numColors: number;
+}) {
   const [colors, setColors] = useState<string[]>([]);
 
   useEffect(() => {
@@ -46,14 +53,14 @@ function ColorPicker({ imageUrl }: { imageUrl: string }) {
     img.src = imageUrl;
     img.onload = () => {
       const colorThief = new ColorThief();
-      const palette = colorThief.getPalette(img, 5);
+      const palette = colorThief.getPalette(img, numColors);
       if (palette) {
         setColors(
           palette.map((color) => `rgb(${color[0]}, ${color[1]}, ${color[2]})`)
         );
       }
     };
-  }, [imageUrl]);
+  }, [imageUrl, numColors]);
 
   return (
     <div className="flex space-x-2 mt-4">
@@ -101,6 +108,60 @@ export default function SongPage() {
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [editOptions, setEditOptions] = useState({
+    showPalette: true,
+    numColors: 5,
+    showReleaseDate: true,
+    showAlbumLength: true,
+    showLabel: true,
+    showTracks: true,
+    numTracksToShow: 6,
+    imageSize: "large" as "small" | "medium" | "large",
+    showArtists: true,
+    showPopularity: false,
+    backgroundStyle: "plain" as "plain" | "gradient" | "blur",
+    fontStyle: "modern" as "modern" | "classic" | "playful",
+    showSpotifyCode: true,
+    spotifyCodeSize: 300,
+    showExplicitLabel: true,
+  });
+
+  const getImageSize = () => {
+    switch (editOptions.imageSize) {
+      case "small":
+        return "w-64";
+      case "medium":
+        return "w-80";
+      case "large":
+        return "w-full max-w-[40rem]";
+      default:
+        return "w-80";
+    }
+  };
+
+  const getBackgroundStyle = () => {
+    switch (editOptions.backgroundStyle) {
+      case "gradient":
+        return "bg-gradient-to-r from-blue-500 to-purple-500";
+      case "blur":
+        return "backdrop-blur-md bg-white/30";
+      default:
+        return "bg-white";
+    }
+  };
+
+  const getFontStyle = () => {
+    switch (editOptions.fontStyle) {
+      case "classic":
+        return "font-serif";
+      case "playful":
+        return "font-comic";
+      default:
+        return "font-sans";
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -156,76 +217,167 @@ export default function SongPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 sm:p-8 font-sans">
-      <div
-        ref={contentRef}
-        className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden p-2"
+    <div
+      className={`flex min-h-screen p-4 sm:p-8 ${getBackgroundStyle()} ${getFontStyle()}`}
+    >
+      <motion.div
+        className="fixed top-4 left-4 z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
       >
-        <div className="relative w-full pb-[100%]">
-          <img
-            src={track.album.images[0].url}
-            alt={`${track.album.name} album cover`}
-            loading="lazy"
-            className="rounded-lg absolute top-0 left-0 w-full h-full object-cover"
-          />
-        </div>
+        <Button onClick={() => setShowEditPanel(!showEditPanel)}>
+          <Edit className="mr-2 h-4 w-4" /> {showEditPanel ? "Close" : "Edit"}
+        </Button>
+      </motion.div>
 
-        <div className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 text-xs uppercase tracking-wide">
-            <div className="mb-2 sm:mb-0">
-              <p className="text-gray-500">RELEASE DATE</p>
-              <p className="font-semibold">
-                {new Date(track.album.release_date).toLocaleDateString(
-                  "en-US",
-                  { month: "short", day: "numeric", year: "numeric" }
-                )}
-              </p>
-            </div>
-            <div className="mb-2 sm:mb-0">
-              <p className="text-gray-500">ALBUM LENGTH</p>
-              <p className="font-semibold">
-                {formatDuration(
-                  album.tracks.items.reduce(
-                    (total, track) => total + track.duration_ms,
-                    0
-                  )
-                )}
-              </p>
-            </div>
-            <div className="mb-2 sm:mb-0">
-              <p className="text-gray-500">LABEL</p>
-              <p className="font-semibold">{album.label}</p>
-            </div>
-            <ColorPicker imageUrl={track.album.images[0].url} />
-          </div>
-          <div className="w-full h-[2px] bg-gray-200 mb-4" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-            {album.tracks.items.map((albumTrack, index) => (
-              <p
-                key={index}
-                className="text-[10px] sm:text-[12px] uppercase rounded"
-              >
-                {albumTrack.name}
-              </p>
-            ))}
-          </div>
-          <div className="mt-4 flex justify-between w-full items-start">
-            <div className="w-full">
-              <h2 className="text-xl font-bold leading-tight">{album.name}</h2>
-              <p className="text-sm text-gray-700 leading-tight">
-                {track.artists.map((a) => a.name).join(", ")}
-              </p>
-            </div>
-            <div className="w-full flex justify-between items-end">
-              <div className="flex-1" />
-              <div className="w-44">
-                <SpotifyCode uri={track.uri} size={600} />
+      <div className="flex w-full justify-center">
+        <AnimatePresence>
+          {showEditPanel && (
+            <motion.div
+              initial={{ x: "-100%", opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: "-100%", opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed left-0 top-0 bottom-0 w-80 bg-white shadow-lg z-20 overflow-y-auto"
+            >
+              <div className="flex justify-between items-center p-4 border-b">
+                <h2 className="text-lg font-semibold">Edit Display</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowEditPanel(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
+              <EditPanel
+                onUpdate={setEditOptions}
+                initialValues={editOptions}
+                track={track}
+                album={album}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.div
+          ref={contentRef}
+          className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden p-2"
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{ marginLeft: showEditPanel ? "320px" : "0" }}
+        >
+          <div className={`${getImageSize()} mx-auto`}>
+            <img
+              src={track.album.images[0].url}
+              alt={`${track.album.name} album cover`}
+              loading="lazy"
+              className="rounded-lg w-full h-auto object-cover"
+            />
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-wrap justify-between items-start sm:items-center mb-4 text-xs uppercase tracking-wide">
+              {editOptions.showReleaseDate && (
+                <div className="mb-2 sm:mb-0 mr-4">
+                  <p className="text-gray-500">RELEASE DATE</p>
+                  <p className="font-semibold">
+                    {new Date(track.album.release_date).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
+                  </p>
+                </div>
+              )}
+              {editOptions.showAlbumLength && (
+                <div className="mb-2 sm:mb-0 mr-4">
+                  <p className="text-gray-500">ALBUM LENGTH</p>
+                  <p className="font-semibold">
+                    {formatDuration(
+                      album.tracks.items.reduce(
+                        (total, track) => total + track.duration_ms,
+                        0
+                      )
+                    )}
+                  </p>
+                </div>
+              )}
+              {editOptions.showLabel && (
+                <div className="mb-2 sm:mb-0 mr-4">
+                  <p className="text-gray-500">LABEL</p>
+                  <p className="font-semibold">{album.label}</p>
+                </div>
+              )}
+              {editOptions.showPopularity && (
+                <div className="mb-2 sm:mb-0 mr-4">
+                  <p className="text-gray-500">POPULARITY</p>
+                  <p className="font-semibold">{track.popularity}%</p>
+                </div>
+              )}
+            </div>
+
+            {editOptions.showPalette && (
+              <div className="mt-2 mb-4">
+                <ColorPicker
+                  imageUrl={track.album.images[0].url}
+                  numColors={editOptions.numColors}
+                />
+              </div>
+            )}
+
+            <div className="w-full h-[2px] bg-gray-200 my-4" />
+
+            {editOptions.showTracks && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                {album.tracks.items
+                  .slice(0, editOptions.numTracksToShow)
+                  .map((albumTrack, index) => (
+                    <p
+                      key={index}
+                      className="text-[10px] sm:text-[12px] uppercase rounded"
+                    >
+                      {albumTrack.name}
+                    </p>
+                  ))}
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-between w-full items-start">
+              <div className="w-full">
+                <h2 className="text-xl font-bold leading-tight">
+                  {album.name}
+                </h2>
+                {editOptions.showArtists && (
+                  <p className="text-sm text-gray-700 leading-tight">
+                    {track.artists.map((a) => a.name).join(", ")}
+                  </p>
+                )}
+                {editOptions.showExplicitLabel && track.explicit && (
+                  <span className="inline-block bg-gray-200 text-gray-800 text-xs font-bold uppercase px-2 py-1 rounded mt-2">
+                    Explicit
+                  </span>
+                )}
+              </div>
+              {editOptions.showSpotifyCode && (
+                <div className="w-full flex justify-end items-end">
+                  <div className="w-44">
+                    <SpotifyCode
+                      uri={track.uri}
+                      size={editOptions.spotifyCodeSize}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-      <div className="mt-4 flex space-x-4 print:opacity-0">
+      <div className="fixed bottom-4 right-4 print:opacity-0">
         <ShareComponent contentRef={contentRef} track={track} />
       </div>
     </div>
