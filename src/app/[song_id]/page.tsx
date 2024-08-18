@@ -153,7 +153,7 @@ export default function SongPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8 font-sans">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 sm:p-8 font-sans">
       <div className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="relative w-full" style={{ paddingTop: "90%" }}>
           <Image
@@ -165,9 +165,9 @@ export default function SongPage() {
           />
         </div>
 
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4 text-xs uppercase tracking-wide">
-            <div>
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 text-xs uppercase tracking-wide">
+            <div className="mb-2 sm:mb-0">
               <p className="text-gray-500">RELEASE DATE</p>
               <p className="font-semibold">
                 {new Date(track.album.release_date).toLocaleDateString(
@@ -176,7 +176,7 @@ export default function SongPage() {
                 )}
               </p>
             </div>
-            <div>
+            <div className="mb-2 sm:mb-0">
               <p className="text-gray-500">ALBUM LENGTH</p>
               <p className="font-semibold">
                 {formatDuration(
@@ -187,32 +187,33 @@ export default function SongPage() {
                 )}
               </p>
             </div>
-            {/* <div>
-              <p className="text-gray-500">TRACKS</p>
-              <p className="font-semibold">{track.album.total_tracks}</p>
-            </div> */}
-            <div>
+            <div className="mb-2 sm:mb-0">
               <p className="text-gray-500">LABEL</p>
               <p className="font-semibold">{album.label}</p>
             </div>
             <ColorPicker imageUrl={track.album.images[0].url} />
           </div>
           <div className="w-full h-[2px] bg-gray-200 mb-4" />
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
             {album.tracks.items.map((albumTrack, index) => (
-              <p key={index} className="text-[12px] uppercase rounded">
+              <p
+                key={index}
+                className="text-[10px] sm:text-[12px] uppercase rounded truncate"
+              >
                 {albumTrack.name}
               </p>
             ))}
           </div>
-          <div className="mt-6 flex justify-between items-end">
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold mb-1">{album.name}</h2>
-              <p className="text-xl text-gray-700">
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-end">
+            <div className="flex-1 mb-4 sm:mb-0">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-1">
+                {album.name}
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-700">
                 {track.artists.map((a) => a.name).join(", ")}
               </p>
             </div>
-            <div className="flex items-end space-x-4">
+            <div className="w-full sm:w-auto">
               <SpotifyCode uri={track.uri} size={400} />
             </div>
           </div>

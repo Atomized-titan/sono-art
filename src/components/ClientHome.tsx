@@ -5,11 +5,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
-const DynamicSearchComponent = dynamic(() => import("@/components/Search"), {
-  ssr: false,
-  loading: () => <p>Loading...</p>,
-});
+import SearchComponent from "./Search";
 
 export default function ClientHome() {
   return (
@@ -17,7 +13,7 @@ export default function ClientHome() {
       <main className="flex-grow">
         <div className="container mx-auto px-4 py-12">
           <motion.header
-            className="flex justify-between items-center py-6"
+            className="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0"
             initial={{ y: -100 }}
             animate={{ y: 0 }}
           >
@@ -36,15 +32,15 @@ export default function ClientHome() {
           </motion.header>
 
           <Suspense fallback={<div>Loading...</div>}>
-            <DynamicSearchComponent />
+            <SearchComponent />
           </Suspense>
         </div>
       </main>
 
-      <footer className="bg-gray-100 mt-auto">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
+      <footer className="bg-gray-100 mt-auto py-6 sm:py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            <p className="text-sm text-gray-500 text-center sm:text-left">
               © 2024 Sonolise™. All Rights Reserved.
             </p>
             <div className="flex space-x-4">
