@@ -1,14 +1,15 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { Disc, Edit, Music, X } from "lucide-react";
+import ColorThief from "colorthief";
+
 import EditPanel from "@/components/EditPanel";
 import { LoadingDots } from "@/components/loading-dots";
 import ShareComponent from "@/components/social-share";
 import { Button } from "@/components/ui/button";
-import ColorThief from "colorthief";
-import { AnimatePresence, motion } from "framer-motion";
-import { Edit, X } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 
 export interface Track {
   name: string;
@@ -24,6 +25,7 @@ export interface Track {
   };
   duration_ms: number;
   uri: string;
+  preview_url: string | null;
 }
 
 export interface AlbumTrack {
@@ -38,6 +40,7 @@ export interface Album {
   };
   label: string;
 }
+
 function ColorPicker({
   imageUrl,
   numColors,
@@ -82,8 +85,8 @@ function formatDuration(ms: number): string {
 }
 
 function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
-  const backgroundColor = "ffffff"; // white background
-  const codeColor = "black"; // black code
+  const backgroundColor = "ffffff";
+  const codeColor = "black";
   const format = "png";
 
   const url = `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${codeColor}/${size}/${uri}`;
@@ -93,7 +96,7 @@ function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
       src={url}
       alt="Spotify Code"
       width={size}
-      height={size / 4} // Spotify Codes are typically 4:1 ratio
+      height={size / 4}
       className=""
     />
   );
@@ -121,47 +124,16 @@ export default function SongPage() {
     imageSize: "large" as "small" | "medium" | "large",
     showArtists: true,
     showPopularity: false,
-    backgroundStyle: "plain" as "plain" | "gradient" | "blur",
+    backgroundStyle: "plain" as "plain" | "gradient" | "blur" | "animated",
     fontStyle: "modern" as "modern" | "classic" | "playful",
     showSpotifyCode: true,
     spotifyCodeSize: 300,
     showExplicitLabel: true,
   });
 
-  const getImageSize = () => {
-    switch (editOptions.imageSize) {
-      case "small":
-        return "w-64";
-      case "medium":
-        return "w-80";
-      case "large":
-        return "w-full max-w-[40rem]";
-      default:
-        return "w-80";
-    }
-  };
-
-  const getBackgroundStyle = () => {
-    switch (editOptions.backgroundStyle) {
-      case "gradient":
-        return "bg-gradient-to-r from-blue-500 to-purple-500";
-      case "blur":
-        return "backdrop-blur-md bg-white/30";
-      default:
-        return "bg-white";
-    }
-  };
-
-  const getFontStyle = () => {
-    switch (editOptions.fontStyle) {
-      case "classic":
-        return "font-serif";
-      case "playful":
-        return "font-comic";
-      default:
-        return "font-sans";
-    }
-  };
+  const [dominantColor, setDominantColor] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -200,6 +172,83 @@ export default function SongPage() {
     fetchData();
   }, [song_id]);
 
+  useEffect(() => {
+    if (track) {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = track.album.images[0].url;
+      img.onload = () => {
+        const colorThief = new ColorThief();
+        const color = colorThief.getColor(img);
+        setDominantColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      };
+
+      if (track.preview_url) {
+        audioRef.current = new Audio(track.preview_url);
+      }
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [track]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const getImageSize = () => {
+    switch (editOptions.imageSize) {
+      case "small":
+        return "w-64";
+      case "medium":
+        return "w-80";
+      case "large":
+        return "w-full max-w-[40rem]";
+      default:
+        return "w-80";
+    }
+  };
+
+  const getBackgroundStyle: () => React.CSSProperties | undefined = () => {
+    switch (editOptions.backgroundStyle) {
+      case "gradient":
+        return {
+          background: `linear-gradient(to bottom right, ${dominantColor}, black)`,
+        };
+      case "blur":
+        return {
+          backdropFilter: "blur(20px)",
+          backgroundColor: "rgba(255, 255, 255, 0.3)",
+        };
+      // case "animated":
+      //   return "bg-gradient-to-r from-purple-500 to-pink-500 animate-gradient-x"; // Use Tailwind class if predefined
+      default:
+        return { backgroundColor: "white" };
+    }
+  };
+
+  const getFontStyle = () => {
+    switch (editOptions.fontStyle) {
+      case "classic":
+        return "font-serif";
+      case "playful":
+        return "font-comic";
+      default:
+        return "font-sans";
+    }
+  };
+
   const contentRef = useRef<HTMLDivElement>(null);
 
   if (loading) {
@@ -218,7 +267,8 @@ export default function SongPage() {
 
   return (
     <div
-      className={`flex min-h-screen p-4 sm:p-8 ${getBackgroundStyle()} ${getFontStyle()}`}
+      className={`flex min-h-screen p-4 sm:p-8 ${getFontStyle()}`}
+      style={getBackgroundStyle()}
     >
       <motion.div
         className="fixed top-4 left-4 z-10"
@@ -268,13 +318,29 @@ export default function SongPage() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           style={{ marginLeft: showEditPanel ? "320px" : "0" }}
         >
-          <div className={`${getImageSize()} mx-auto`}>
+          <div className={`${getImageSize()} mx-auto relative group`}>
             <img
               src={track.album.images[0].url}
               alt={`${track.album.name} album cover`}
               loading="lazy"
               className="rounded-lg w-full h-auto object-cover"
             />
+            {track.preview_url && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full bg-white text-black"
+                  onClick={togglePlay}
+                >
+                  {isPlaying ? (
+                    <Disc className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Music className="h-6 w-6" />
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="p-4 sm:p-6">
@@ -339,7 +405,7 @@ export default function SongPage() {
                   .map((albumTrack, index) => (
                     <p
                       key={index}
-                      className="text-[10px] sm:text-[12px] uppercase rounded"
+                      className="text-[10px] sm:text-[16px] uppercase rounded"
                     >
                       {albumTrack.name}
                     </p>
@@ -347,7 +413,7 @@ export default function SongPage() {
               </div>
             )}
 
-            <div className="mt-4 flex justify-between w-full items-start">
+            <div className="mt-8 flex justify-between w-full items-start">
               <div className="w-full">
                 <h2 className="text-xl font-bold leading-tight">
                   {album.name}
@@ -375,6 +441,9 @@ export default function SongPage() {
               )}
             </div>
           </div>
+          {isPlaying && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 animate-progress" />
+          )}
         </motion.div>
       </div>
       <div className="fixed bottom-4 right-4 print:opacity-0">

@@ -27,7 +27,7 @@ const editSchema = z.object({
   imageSize: z.enum(["small", "medium", "large"]),
   showArtists: z.boolean(),
   showPopularity: z.boolean(),
-  backgroundStyle: z.enum(["plain", "gradient", "blur"]),
+  backgroundStyle: z.enum(["plain", "gradient", "blur", "animated"]),
   fontStyle: z.enum(["modern", "classic", "playful"]),
   showSpotifyCode: z.boolean(),
   spotifyCodeSize: z.number().min(100).max(1000),
@@ -206,6 +206,7 @@ const EditPanel = ({
                   <SelectItem value="plain">Plain</SelectItem>
                   <SelectItem value="gradient">Gradient</SelectItem>
                   <SelectItem value="blur">Blur</SelectItem>
+                  {/* <SelectItem value="animated">Animated</SelectItem> */}
                 </SelectContent>
               </Select>
             )}
