@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "colorthief": "^2.4.0",
     "framer-motion": "^11.3.28",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.428.0",
     "next": "14.2.5",
     "react": "^18",

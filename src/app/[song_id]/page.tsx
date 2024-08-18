@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { LoadingDots } from "@/components/loading-dots";
 import ColorThief from "colorthief";
+import html2canvas from "html2canvas";
+import { Button } from "@/components/ui/button";
+import { Download, Share2 } from "lucide-react";
 
 interface Track {
   name: string;
@@ -77,15 +80,13 @@ function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
   const url = `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${codeColor}/${size}/${uri}`;
 
   return (
-    <div className="">
-      <Image
-        src={url}
-        alt="Spotify Code"
-        width={size}
-        height={size / 4} // Spotify Codes are typically 4:1 ratio
-        layout="responsive"
-      />
-    </div>
+    <Image
+      src={url}
+      alt="Spotify Code"
+      width={size}
+      height={size / 4} // Spotify Codes are typically 4:1 ratio
+      layout="responsive"
+    />
   );
 }
 
@@ -136,6 +137,70 @@ export default function SongPage() {
     fetchData();
   }, [song_id]);
 
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const captureImage = async () => {
+    if (contentRef.current) {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2, // Increase resolution
+        useCORS: true, // Enable CORS for images
+        allowTaint: true,
+        backgroundColor: null, // Transparent background
+      });
+      return canvas.toDataURL("image/png");
+    }
+  };
+
+  const handleShare = async () => {
+    const imageDataUrl = await captureImage();
+    if (imageDataUrl && track) {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${track.name} by ${track.artists
+              .map((a) => a.name)
+              .join(", ")}`,
+            text: "Check out this album art!",
+            files: [
+              new File(
+                [await (await fetch(imageDataUrl)).blob()],
+                `${track.name.replace(
+                  /\s+/g,
+                  "_"
+                )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`,
+                { type: "image/png" }
+              ),
+            ],
+          });
+        } catch (error) {
+          console.error("Error sharing:", error);
+        }
+      } else {
+        // Fallback for browsers that don't support native sharing
+        const link = document.createElement("a");
+        link.href = imageDataUrl;
+        link.download = `${track.name.replace(
+          /\s+/g,
+          "_"
+        )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`;
+        link.click();
+      }
+    }
+  };
+
+  const handleDownload = async () => {
+    const imageDataUrl = await captureImage();
+    if (imageDataUrl && track) {
+      const link = document.createElement("a");
+      link.href = imageDataUrl;
+      link.download = `${track.name.replace(
+        /\s+/g,
+        "_"
+      )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`;
+      link.click();
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-white">
@@ -154,14 +219,17 @@ export default function SongPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4 sm:p-8 font-sans">
-      <div className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="relative w-full" style={{ paddingTop: "90%" }}>
+      <div
+        ref={contentRef}
+        className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden p-2"
+      >
+        <div className="relative w-full pb-[100%]">
           <Image
             src={track.album.images[0].url}
             alt={`${track.album.name} album cover`}
             layout="fill"
-            objectFit="cover"
-            className="absolute top-0 left-0"
+            objectFit="contain"
+            className="rounded-lg"
           />
         </div>
 
@@ -198,26 +266,37 @@ export default function SongPage() {
             {album.tracks.items.map((albumTrack, index) => (
               <p
                 key={index}
-                className="text-[10px] sm:text-[12px] uppercase rounded truncate"
+                className="text-[10px] sm:text-[12px] uppercase rounded"
               >
                 {albumTrack.name}
               </p>
             ))}
           </div>
-          <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-end">
-            <div className="flex-1 mb-4 sm:mb-0">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-1">
-                {album.name}
-              </h2>
-              <p className="text-lg sm:text-xl text-gray-700">
+          <div className="mt-4 flex justify-between w-full items-start">
+            <div className="w-full">
+              <h2 className="text-xl font-bold leading-tight">{album.name}</h2>
+              <p className="text-sm text-gray-700 leading-tight">
                 {track.artists.map((a) => a.name).join(", ")}
               </p>
             </div>
-            <div className="w-full sm:w-auto">
-              <SpotifyCode uri={track.uri} size={400} />
+            <div className="w-full flex justify-between items-end">
+              <div className="flex-1" />
+              <div className="w-32">
+                <SpotifyCode uri={track.uri} size={300} />
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      <div className="mt-4 flex space-x-4">
+        <Button onClick={handleShare} className="flex items-center">
+          <Share2 className="mr-2 h-4 w-4" />
+          Share
+        </Button>
+        <Button onClick={handleDownload} className="flex items-center">
+          <Download className="mr-2 h-4 w-4" />
+          Download
+        </Button>
       </div>
     </div>
   );

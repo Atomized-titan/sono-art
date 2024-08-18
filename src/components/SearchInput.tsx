@@ -54,7 +54,7 @@ export default function SearchInput({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           placeholder="Search for an album..."
           className="flex-grow bg-transparent text-gray-800 border border-gray-300 rounded-lg sm:rounded-l-lg sm:rounded-r-none focus:ring-blue-500 focus:border-blue-500"
         />
