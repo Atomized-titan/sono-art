@@ -80,12 +80,12 @@ function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
   const url = `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${codeColor}/${size}/${uri}`;
 
   return (
-    <Image
+    <img
       src={url}
       alt="Spotify Code"
       width={size}
       height={size / 4} // Spotify Codes are typically 4:1 ratio
-      layout="responsive"
+      className=""
     />
   );
 }
@@ -224,12 +224,11 @@ export default function SongPage() {
         className="max-w-[40rem] w-full bg-white shadow-lg rounded-lg overflow-hidden p-2"
       >
         <div className="relative w-full pb-[100%]">
-          <Image
+          <img
             src={track.album.images[0].url}
             alt={`${track.album.name} album cover`}
-            layout="fill"
-            objectFit="contain"
-            className="rounded-lg"
+            loading="lazy"
+            className="rounded-lg absolute top-0 left-0 w-full h-full object-cover"
           />
         </div>
 
@@ -281,14 +280,14 @@ export default function SongPage() {
             </div>
             <div className="w-full flex justify-between items-end">
               <div className="flex-1" />
-              <div className="w-32">
-                <SpotifyCode uri={track.uri} size={300} />
+              <div className="w-44">
+                <SpotifyCode uri={track.uri} size={600} />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-4 flex space-x-4">
+      <div className="mt-4 flex space-x-4 print:opacity-0">
         <Button onClick={handleShare} className="flex items-center">
           <Share2 className="mr-2 h-4 w-4" />
           Share
