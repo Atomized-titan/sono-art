@@ -8,8 +8,10 @@ import ColorThief from "colorthief";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { Download, Share2 } from "lucide-react";
+import { handleDownload, handleShare } from "@/lib/image-utils";
+import ShareComponent from "@/components/social-share";
 
-interface Track {
+export interface Track {
   name: string;
   artists: { name: string }[];
   album: {
@@ -23,12 +25,12 @@ interface Track {
   uri: string;
 }
 
-interface AlbumTrack {
+export interface AlbumTrack {
   name: string;
   duration_ms: number;
 }
 
-interface Album {
+export interface Album {
   name: string;
   tracks: {
     items: AlbumTrack[];
@@ -139,73 +141,9 @@ export default function SongPage() {
 
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const captureImage = async () => {
-    if (contentRef.current) {
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2, // Increase resolution
-        useCORS: true, // Enable CORS for images
-        allowTaint: true,
-        backgroundColor: null, // Transparent background
-      });
-      return canvas.toDataURL("image/png");
-    }
-  };
-
-  const handleShare = async () => {
-    const imageDataUrl = await captureImage();
-    if (imageDataUrl && track) {
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `${track.name} by ${track.artists
-              .map((a) => a.name)
-              .join(", ")}`,
-            text: "Check out this album art!",
-            files: [
-              new File(
-                [await (await fetch(imageDataUrl)).blob()],
-                `${track.name.replace(
-                  /\s+/g,
-                  "_"
-                )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`,
-                { type: "image/png" }
-              ),
-            ],
-          });
-        } catch (error) {
-          console.error("Error sharing:", error);
-        }
-      } else {
-        // Fallback for browsers that don't support native sharing
-        const link = document.createElement("a");
-        link.href = imageDataUrl;
-        link.download = `${track.name.replace(
-          /\s+/g,
-          "_"
-        )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`;
-        link.click();
-      }
-    }
-  };
-
-  const handleDownload = async () => {
-    const imageDataUrl = await captureImage();
-    if (imageDataUrl && track) {
-      const link = document.createElement("a");
-      link.href = imageDataUrl;
-      link.download = `${track.name.replace(
-        /\s+/g,
-        "_"
-      )}_${track.artists[0].name.replace(/\s+/g, "_")}.png`;
-      link.click();
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <LoadingDots />
-      </div>
+      <LoadingDots className="flex items-center justify-center h-screen bg-white" />
     );
   }
 
@@ -288,14 +226,7 @@ export default function SongPage() {
         </div>
       </div>
       <div className="mt-4 flex space-x-4 print:opacity-0">
-        <Button onClick={handleShare} className="flex items-center">
-          <Share2 className="mr-2 h-4 w-4" />
-          Share
-        </Button>
-        <Button onClick={handleDownload} className="flex items-center">
-          <Download className="mr-2 h-4 w-4" />
-          Download
-        </Button>
+        <ShareComponent contentRef={contentRef} track={track} />
       </div>
     </div>
   );
