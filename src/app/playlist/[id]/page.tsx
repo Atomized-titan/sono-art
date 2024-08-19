@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingDots from "@/components/loading-dots";
 import { Button } from "@/components/ui/button";
 import { Track } from "@/types";
 import axios from "axios";
@@ -12,16 +13,20 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   const [songs, setSongs] = useState<Track[]>([]);
   const [playlistName, setPlaylistName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPlaylistSongs = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`/api/spotify/playlist/${params.id}`);
         setSongs(response.data.tracks.items.map((item: any) => item.track));
         setPlaylistName(response.data.name);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching playlist songs:", error);
         setError("Failed to load playlist. It might be private or not exist.");
+        setLoading(false);
       }
     };
 
@@ -33,6 +38,10 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
     const seconds = ((ms % 60000) / 1000).toFixed(0);
     return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
   };
+
+  if (loading) {
+    return <LoadingDots />;
+  }
 
   if (error) {
     return (

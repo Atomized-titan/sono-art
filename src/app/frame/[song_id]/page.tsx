@@ -7,12 +7,13 @@ import { Disc, Edit, Music, X } from "lucide-react";
 import ColorThief from "colorthief";
 
 import EditPanel from "@/components/EditPanel";
-import { LoadingDots } from "@/components/loading-dots";
+
 import ShareComponent from "@/components/social-share";
 import { Button } from "@/components/ui/button";
 import { Album, Track } from "@/types";
 import { AlbumCover } from "@/components/album-components/album-cover";
 import { AlbumInfo } from "@/components/album-components/album-info";
+import LoadingDots from "@/components/loading-dots";
 
 export default function SongPage() {
   const params = useParams();
@@ -151,9 +152,7 @@ export default function SongPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   if (loading) {
-    return (
-      <LoadingDots className="flex items-center justify-center h-screen bg-white" />
-    );
+    return <LoadingDots />;
   }
 
   if (error || !track || !album) {

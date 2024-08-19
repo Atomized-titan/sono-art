@@ -1,23 +1,61 @@
-import { motion } from "framer-motion";
+import { motion, Transition } from "framer-motion";
+import React from "react";
 
-export const LoadingDots = (props: React.ComponentPropsWithoutRef<"div">) => {
+const ContainerVariants = {
+  initial: {
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+  animate: {
+    transition: {
+      staggerChildren: 0.2,
+      repeat: Infinity,
+    },
+  },
+};
+
+const DotVariants = {
+  initial: {
+    y: "0%",
+  },
+  animate: {
+    y: "100%",
+  },
+};
+
+const DotTransition: Transition = {
+  duration: 0.5,
+  repeat: Infinity,
+  repeatType: "reverse",
+  ease: "easeInOut",
+};
+
+export default function LoadingDots() {
   return (
-    <div className="flex space-x-2" {...props}>
-      {[0, 1, 2].map((index) => (
-        <motion.div
-          key={index}
-          className="w-3 h-3 bg-white rounded-full"
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 1,
-            repeat: Infinity,
-            delay: index * 0.2,
-          }}
+    <div className="w-full flex items-center justify-center pt-20 h-screen">
+      <motion.div
+        className="w-40 h-20 flex justify-around"
+        variants={ContainerVariants}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.span
+          className="block w-8 h-8 bg-primary rounded-full"
+          variants={DotVariants}
+          transition={DotTransition}
         />
-      ))}
+        <motion.span
+          className="block w-8 h-8 bg-primary rounded-full"
+          variants={DotVariants}
+          transition={DotTransition}
+        />
+        <motion.span
+          className="block w-8 h-8 bg-primary rounded-full"
+          variants={DotVariants}
+          transition={DotTransition}
+        />
+      </motion.div>
     </div>
   );
-};
+}
