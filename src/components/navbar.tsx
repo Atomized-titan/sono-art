@@ -89,7 +89,6 @@ const Navbar = () => {
                 <Button onClick={() => signIn("spotify")} variant="ghost">
                   Sign in
                 </Button>
-                <Button onClick={() => signIn("spotify")}>Sign up</Button>
               </>
             )}
           </nav>
@@ -138,12 +137,6 @@ const Navbar = () => {
                       className="w-full justify-start"
                     >
                       Sign in
-                    </Button>
-                    <Button
-                      onClick={() => signIn("spotify")}
-                      className="w-full"
-                    >
-                      Sign up
                     </Button>
                   </>
                 )}
