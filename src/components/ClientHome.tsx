@@ -6,6 +6,7 @@ import SearchComponent from "./Search";
 import Navbar from "./navbar";
 import Marquee from "./ui/marquee";
 import { cn } from "@/lib/utils";
+import Meteors from "./ui/meteors";
 
 const reviews = [
   {
@@ -85,7 +86,8 @@ const ReviewCard = ({
 
 export default function ClientHome() {
   return (
-    <div className="flex flex-col min-h-screen bg-white text-gray-900">
+    <div className="flex relative flex-col min-h-screen bg-white text-gray-900 overflow-hidden">
+      <Meteors number={30} />
       <main className="flex-grow">
         <Navbar />
         <div className="container mx-auto px-4 py-12">
@@ -93,7 +95,7 @@ export default function ClientHome() {
             <SearchComponent />
           </Suspense>
         </div>
-        <div className="container mx-auto px-4 mt-24 flex flex-col items-center">
+        <div className="container mx-auto px-4 my-24 flex flex-col items-center">
           <h2 className="text-3xl font-bold mb-2">Showcase</h2>
           <p className="text-lg text-gray-600 mb-12">
             Here are some of our favorite albums.

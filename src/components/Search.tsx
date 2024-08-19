@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useState } from "react";
+import Meteors from "./ui/meteors";
 const DynamicSearchInput = dynamic(() => import("@/components/SearchInput"), {
   ssr: false,
   loading: () => <div className="h-12 bg-gray-200 rounded animate-pulse"></div>,
@@ -23,8 +24,10 @@ export default function SearchComponent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-5xl font-bold mb-4">Frame Your Favorite Album</h2>
-        <p className="text-xl text-gray-600 mb-8">
+        <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300/80 bg-clip-text text-center text-5xl lg:text-8xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
+          Frame Your Favorite Album
+        </span>
+        <p className="text-base md:text-xl text-gray-600 mb-8 mt-4">
           Search for albums and transform them into beautiful frames with
           details and Spotify codes.
         </p>
