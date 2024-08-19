@@ -90,7 +90,6 @@ export default function ClientHome() {
     <div className="flex relative flex-col min-h-screen bg-white text-gray-900 overflow-hidden">
       <Meteors number={30} />
       <main className="flex-grow">
-        <Navbar />
         <div className="container mx-auto px-4 py-12">
           <Suspense fallback={<div>Loading...</div>}>
             <SearchComponent />
@@ -112,8 +111,6 @@ export default function ClientHome() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
