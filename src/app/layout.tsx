@@ -5,6 +5,8 @@ import { Providers } from "@/lib/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://sonolise.com";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://sonolise.com"),
   title: {
@@ -25,14 +27,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://sonolise.com",
+    url: baseUrl,
     siteName: "Sonolise",
     title: "Sonolise | Transform Songs into Visuals",
     description:
       "Create stunning visuals from your favorite songs with Sonolise",
     images: [
       {
-        url: "https://sonolise.com/og-image.jpg",
+        url: `${baseUrl}/opengraph-image.png`,
         width: 1200,
         height: 630,
         alt: "Sonolise - Song Visualization",
@@ -46,7 +48,7 @@ export const metadata: Metadata = {
     title: "Sonolise | Transform Songs into Visuals",
     description:
       "Create stunning visuals from your favorite songs with Sonolise",
-    images: ["https://sonolise.com/twitter-image.jpg"],
+    images: ["/opengraph-image.png"],
   },
   icons: {
     icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
