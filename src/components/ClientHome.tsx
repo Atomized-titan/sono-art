@@ -62,7 +62,7 @@ const ReviewCard = ({
   artist: string;
 }) => {
   return (
-    <Link href={`/${song_id}`}>
+    <Link href={`/frame/${song_id}`}>
       <figure
         className={cn(
           "flex flex-col w-80 h-96 cursor-pointer overflow-hidden rounded-3xl",

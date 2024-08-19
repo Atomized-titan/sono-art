@@ -65,7 +65,7 @@ export default function SearchComponent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Link href={`/${result.id}`}>
+                  <Link href={`/frame/${result.id}`}>
                     <Image
                       src={result.album.images[0].url}
                       alt={result.name}
