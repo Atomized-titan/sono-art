@@ -1,4 +1,4 @@
-import { Track } from "@/app/[song_id]/page";
+import { Track } from "@/types";
 import html2canvas from "html2canvas";
 
 const captureImage = async (contentRef: React.RefObject<HTMLDivElement>) => {

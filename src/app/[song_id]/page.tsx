@@ -10,97 +10,9 @@ import EditPanel from "@/components/EditPanel";
 import { LoadingDots } from "@/components/loading-dots";
 import ShareComponent from "@/components/social-share";
 import { Button } from "@/components/ui/button";
-
-export interface Track {
-  name: string;
-  explicit: boolean;
-  popularity: number;
-  artists: { name: string }[];
-  album: {
-    name: string;
-    images: { url: string; height: number; width: number }[];
-    release_date: string;
-    total_tracks: number;
-    id: string;
-  };
-  duration_ms: number;
-  uri: string;
-  preview_url: string | null;
-}
-
-export interface AlbumTrack {
-  name: string;
-  duration_ms: number;
-}
-
-export interface Album {
-  name: string;
-  tracks: {
-    items: AlbumTrack[];
-  };
-  label: string;
-}
-
-function ColorPicker({
-  imageUrl,
-  numColors,
-}: {
-  imageUrl: string;
-  numColors: number;
-}) {
-  const [colors, setColors] = useState<string[]>([]);
-
-  useEffect(() => {
-    const img = document.createElement("img");
-    img.crossOrigin = "Anonymous";
-    img.src = imageUrl;
-    img.onload = () => {
-      const colorThief = new ColorThief();
-      const palette = colorThief.getPalette(img, numColors);
-      if (palette) {
-        setColors(
-          palette.map((color) => `rgb(${color[0]}, ${color[1]}, ${color[2]})`)
-        );
-      }
-    };
-  }, [imageUrl, numColors]);
-
-  return (
-    <div className="flex space-x-2 mt-4">
-      {colors.map((color, index) => (
-        <div
-          key={index}
-          className="w-8 h-8 rounded-full print:border print:border-gray-300"
-          style={{ backgroundColor: color }}
-        ></div>
-      ))}
-    </div>
-  );
-}
-
-function formatDuration(ms: number): string {
-  const minutes = Math.floor(ms / 60000);
-  const seconds = ((ms % 60000) / 1000).toFixed(0);
-  return `${minutes}:${Number(seconds) < 10 ? "0" : ""}${seconds}`;
-}
-
-function SpotifyCode({ uri, size = 300 }: { uri: string; size?: number }) {
-  const backgroundColor = "ffffff";
-  const codeColor = "black";
-  const format = "png";
-
-  const url = `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${codeColor}/${size}/${uri}`;
-
-  return (
-    <img
-      src={url}
-      alt="Spotify Code"
-      width={size}
-      height={size / 4}
-      className=""
-    />
-  );
-}
+import { Album, Track } from "@/types";
+import { AlbumCover } from "@/components/album-components/album-cover";
+import { AlbumInfo } from "@/components/album-components/album-info";
 
 export default function SongPage() {
   const params = useParams();
@@ -207,19 +119,6 @@ export default function SongPage() {
     }
   };
 
-  const getImageSize = () => {
-    switch (editOptions.imageSize) {
-      case "small":
-        return "w-64";
-      case "medium":
-        return "w-80";
-      case "large":
-        return "w-full max-w-[40rem]";
-      default:
-        return "w-80";
-    }
-  };
-
   const getBackgroundStyle: () => React.CSSProperties | undefined = () => {
     switch (editOptions.backgroundStyle) {
       case "gradient":
@@ -276,7 +175,10 @@ export default function SongPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <Button onClick={() => setShowEditPanel(!showEditPanel)}>
+        <Button
+          onClick={() => setShowEditPanel(!showEditPanel)}
+          className="print:hidden"
+        >
           <Edit className="mr-2 h-4 w-4" /> {showEditPanel ? "Close" : "Edit"}
         </Button>
       </motion.div>
@@ -318,129 +220,13 @@ export default function SongPage() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           style={{ marginLeft: showEditPanel ? "320px" : "0" }}
         >
-          <div className={`${getImageSize()} mx-auto relative group`}>
-            <img
-              src={track.album.images[0].url}
-              alt={`${track.album.name} album cover`}
-              loading="lazy"
-              className="rounded-lg w-full h-auto object-cover"
-            />
-            {track.preview_url && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full bg-white text-black"
-                  onClick={togglePlay}
-                >
-                  {isPlaying ? (
-                    <Disc className="h-6 w-6 animate-spin" />
-                  ) : (
-                    <Music className="h-6 w-6" />
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-wrap justify-between items-start sm:items-center mb-4 text-xs uppercase tracking-wide">
-              {editOptions.showReleaseDate && (
-                <div className="mb-2 sm:mb-0 mr-4">
-                  <p className="text-gray-500">RELEASE DATE</p>
-                  <p className="font-semibold">
-                    {new Date(track.album.release_date).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
-                  </p>
-                </div>
-              )}
-              {editOptions.showAlbumLength && (
-                <div className="mb-2 sm:mb-0 mr-4">
-                  <p className="text-gray-500">ALBUM LENGTH</p>
-                  <p className="font-semibold">
-                    {formatDuration(
-                      album.tracks.items.reduce(
-                        (total, track) => total + track.duration_ms,
-                        0
-                      )
-                    )}
-                  </p>
-                </div>
-              )}
-              {editOptions.showLabel && (
-                <div className="mb-2 sm:mb-0 mr-4">
-                  <p className="text-gray-500">LABEL</p>
-                  <p className="font-semibold">{album.label}</p>
-                </div>
-              )}
-              {editOptions.showPopularity && (
-                <div className="mb-2 sm:mb-0 mr-4">
-                  <p className="text-gray-500">POPULARITY</p>
-                  <p className="font-semibold">{track.popularity}%</p>
-                </div>
-              )}
-            </div>
-
-            {editOptions.showPalette && (
-              <div className="mt-2 mb-4">
-                <ColorPicker
-                  imageUrl={track.album.images[0].url}
-                  numColors={editOptions.numColors}
-                />
-              </div>
-            )}
-
-            <div className="w-full h-[2px] bg-gray-200 my-4" />
-
-            {editOptions.showTracks && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                {album.tracks.items
-                  .slice(0, editOptions.numTracksToShow)
-                  .map((albumTrack, index) => (
-                    <p
-                      key={index}
-                      className="text-[10px] sm:text-[16px] uppercase rounded"
-                    >
-                      {albumTrack.name}
-                    </p>
-                  ))}
-              </div>
-            )}
-
-            <div className="mt-8 flex justify-between w-full items-start">
-              <div className="w-full">
-                <h2 className="text-xl font-bold leading-tight">
-                  {album.name}
-                </h2>
-                {editOptions.showArtists && (
-                  <p className="text-sm text-gray-700 leading-tight">
-                    {track.artists.map((a) => a.name).join(", ")}
-                  </p>
-                )}
-                {editOptions.showExplicitLabel && track.explicit && (
-                  <span className="inline-block bg-gray-200 text-gray-800 text-xs font-bold uppercase px-2 py-1 rounded mt-2">
-                    Explicit
-                  </span>
-                )}
-              </div>
-              {editOptions.showSpotifyCode && (
-                <div className="w-full flex justify-end items-end">
-                  <div className="w-44">
-                    <SpotifyCode
-                      uri={track.uri}
-                      size={editOptions.spotifyCodeSize}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <AlbumCover
+            track={track}
+            imageSize={editOptions.imageSize}
+            isPlaying={isPlaying}
+            togglePlay={togglePlay}
+          />
+          <AlbumInfo track={track} album={album} editOptions={editOptions} />
           {isPlaying && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500 animate-progress" />
           )}
