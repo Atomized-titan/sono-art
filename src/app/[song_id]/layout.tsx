@@ -37,9 +37,7 @@ export async function generateMetadata({
 
   // Fetch song data
   try {
-    console.log(`Fetching data for song_id: ${song_id}`);
     const songData = await getTrack(song_id);
-    console.log("Fetched song data:", songData);
 
     // Update metadata with song-specific information
     metadata = {
@@ -69,8 +67,6 @@ export async function generateMetadata({
     console.error("Failed to fetch song data for metadata:", error);
     // In case of error, we'll use the default metadata
   }
-
-  console.log("Final metadata:", metadata);
   return metadata;
 }
 

@@ -63,7 +63,17 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
   const copyLinkToClipboard = async () => {
     setCopiedLink(false);
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        // Fallback method for unsupported browsers (mainly older mobile browsers)
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
@@ -79,9 +89,32 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
         .map((a) => a.name)
         .join(", ")}`;
       const text = "Check out this track on Sonolise!";
+      let imageUrl = previewImage;
 
       switch (platform) {
         case "instagram":
+          if (navigator.canShare() && imageUrl) {
+            // Share to Instagram Story via the native share feature
+            await navigator.share({
+              title,
+              text,
+              files: [
+                new File([imageUrl], `${track.name}.png`, {
+                  type: "image/png",
+                }),
+              ],
+            });
+          } else if (imageUrl) {
+            // Instagram Story share fallback with URL scheme
+            window.open(
+              `https://www.instagram.com/stories/share?backgroundImageUrl=${encodeURIComponent(
+                imageUrl
+              )}`,
+              "_blank"
+            );
+          }
+          break;
+
         case "twitter":
         case "facebook":
         case "linkedin":
@@ -91,6 +124,7 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
             window.open(getShareUrl(platform, title, shareUrl), "_blank");
           }
           break;
+
         case "download":
           if (previewImage) {
             const link = document.createElement("a");
