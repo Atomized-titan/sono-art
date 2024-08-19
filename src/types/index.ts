@@ -1,4 +1,5 @@
 export interface Track {
+  id: string;
   name: string;
   explicit: boolean;
   popularity: number;
