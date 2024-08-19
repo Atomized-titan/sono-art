@@ -5,10 +5,11 @@ import { Providers } from "@/lib/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://sonolise.com";
+const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL || "https://sonolise.vercel.app";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sonolise.com"),
+  metadataBase: new URL(baseUrl),
   title: {
     default: "Sonolise | Transform Songs into Visuals",
     template: "%s",
