@@ -80,16 +80,18 @@ export function AlbumInfo({ track, album, editOptions }: AlbumInfoProps) {
 
       <div className="mt-8 flex flex-col sm:flex-row justify-between w-full items-start sm:items-center">
         <div className="w-full mb-4 sm:mb-0">
-          <h2 className="text-xl font-bold leading-tight">{album.name}</h2>
+          <div className="flex justify-start items-start sm:items-end">
+            <h2 className="text-xl font-bold leading-tight">{album.name} </h2>
+            {editOptions.showExplicitLabel && track.explicit && (
+              <div className="bg-gray-200 text-gray-800 text-xs font-semibold uppercase px-2 py-1 ml-2 rounded transition-all duration-300 hover:bg-gray-300">
+                <span>E</span>
+              </div>
+            )}
+          </div>
           {editOptions.showArtists && (
-            <p className="text-sm text-gray-700 leading-tight mt-1">
+            <p className="text-sm text-gray-700 leading-tight mt-2">
               {track.artists.map((a) => a.name).join(", ")}
             </p>
-          )}
-          {editOptions.showExplicitLabel && track.explicit && (
-            <span className="inline-block bg-gray-200 text-gray-800 text-xs font-semibold uppercase px-2 py-1 rounded mt-2 transition-all duration-300 hover:bg-gray-300">
-              Explicit
-            </span>
           )}
         </div>
         {editOptions.showSpotifyCode && (
