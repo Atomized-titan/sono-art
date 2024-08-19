@@ -11,7 +11,7 @@ interface AlbumInfoProps {
 
 export function AlbumInfo({ track, album, editOptions }: AlbumInfoProps) {
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 relative">
       <div className="flex flex-wrap justify-between items-start sm:items-center mb-4 text-xs uppercase tracking-wide">
         {editOptions.showReleaseDate && (
           <div className="mb-2 sm:mb-0 mr-4">
@@ -70,7 +70,7 @@ export function AlbumInfo({ track, album, editOptions }: AlbumInfoProps) {
             .map((albumTrack, index) => (
               <p
                 key={index}
-                className="text-[10px] sm:text-[16px] uppercase rounded"
+                className="text-[10px] sm:text-[16px] uppercase rounded text-slate-600"
               >
                 {albumTrack.name}
               </p>
@@ -83,7 +83,7 @@ export function AlbumInfo({ track, album, editOptions }: AlbumInfoProps) {
           <div className="flex justify-start items-start sm:items-end">
             <h2 className="text-xl font-bold leading-tight">{album.name} </h2>
             {editOptions.showExplicitLabel && track.explicit && (
-              <div className="bg-gray-200 text-gray-800 text-xs font-semibold uppercase px-2 py-1 ml-2 rounded transition-all duration-300 hover:bg-gray-300">
+              <div className="bg-gray-200 text-gray-800 text-xs font-semibold uppercase px-2 py-1 ml-2 rounded explicit-label">
                 <span>E</span>
               </div>
             )}
@@ -101,6 +101,9 @@ export function AlbumInfo({ track, album, editOptions }: AlbumInfoProps) {
             </div>
           </div>
         )}
+      </div>
+      <div className="absolute bottom-2 right-2 text-xs text-gray-400 opacity-50 sonolise-watermark">
+        Created with Sonolise
       </div>
     </div>
   );

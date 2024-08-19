@@ -1,14 +1,3 @@
-import React, { useState, useEffect } from "react";
-import {
-  Share,
-  Download,
-  Check,
-  Link,
-  Instagram,
-  Twitter,
-  Facebook,
-  Linkedin,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +7,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import html2canvas from "html2canvas";
+import domtoimage from "dom-to-image";
+import {
+  Check,
+  Download,
+  Facebook,
+  Instagram,
+  Link,
+  Linkedin,
+  Share,
+  Twitter,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface ShareComponentProps {
   contentRef: React.RefObject<HTMLDivElement>;
@@ -50,13 +50,21 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
 
   const captureImage = async () => {
     if (contentRef.current) {
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
+      const scale = 2; // Scaling factor to increase resolution
+      const domNode = contentRef.current;
+
+      const dataUrl = await domtoimage.toPng(domNode, {
+        width: domNode.clientWidth * scale, // Scaling the width
+        height: domNode.clientHeight * scale, // Scaling the height
+        style: {
+          transform: `scale(${scale})`,
+          transformOrigin: "top left", // Ensures scaling from the top-left corner
+          width: domNode.clientWidth + "px", // Original width to avoid visual issues
+          height: domNode.clientHeight + "px", // Original height to avoid visual issues
+        },
       });
-      setPreviewImage(canvas.toDataURL("image/png"));
+
+      setPreviewImage(dataUrl); // Setting the generated image as a preview
     }
   };
 

@@ -27,8 +27,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "colorthief": "^2.4.0",
+    "dom-to-image": "^2.6.0",
     "framer-motion": "^11.3.28",
-    "html2canvas": "^1.4.1",
     "lucide-react": "^0.428.0",
     "next": "14.2.5",
     "next-auth": "^4.24.7",
@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
+    "@types/dom-to-image": "^2.6.7",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
