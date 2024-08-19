@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useState } from "react";
-import Meteors from "./ui/meteors";
 const DynamicSearchInput = dynamic(() => import("@/components/SearchInput"), {
   ssr: false,
   loading: () => <div className="h-12 bg-gray-200 rounded animate-pulse"></div>,

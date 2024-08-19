@@ -7,6 +7,7 @@ import Navbar from "./navbar";
 import Marquee from "./ui/marquee";
 import { cn } from "@/lib/utils";
 import Meteors from "./ui/meteors";
+import Footer from "./ui/footer";
 
 const reviews = [
   {
@@ -112,29 +113,7 @@ export default function ClientHome() {
         </div>
       </main>
 
-      <footer className="bg-gray-100 mt-auto py-6 sm:py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <p className="text-sm text-gray-500 text-center sm:text-left">
-              © 2024 Sonolise. All Rights Reserved.
-            </p>
-            <div className="flex space-x-4">
-              <Link
-                href="/privacy"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Terms of Service
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
