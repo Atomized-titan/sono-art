@@ -1,11 +1,23 @@
-import React, { useState } from "react";
-import { Instagram, Link, Share, Download, Check } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Share,
+  Download,
+  Check,
+  Link,
+  Instagram,
+  Twitter,
+  Facebook,
+  Linkedin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import html2canvas from "html2canvas";
 
 interface ShareComponentProps {
@@ -21,141 +33,74 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
   track,
 }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState("");
 
-  const captureImage = async (targetWidth?: number, targetHeight?: number) => {
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, []);
+
+  useEffect(() => {
+    if (showShareDialog) {
+      captureImage();
+    }
+  }, [showShareDialog]);
+
+  const captureImage = async () => {
     if (contentRef.current) {
-      const element = contentRef.current;
-
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
       });
-
-      if (!targetWidth || !targetHeight) {
-        return canvas.toDataURL("image/png");
-      }
-
-      const targetCanvas = document.createElement("canvas");
-      targetCanvas.width = targetWidth;
-      targetCanvas.height = targetHeight;
-      const ctx = targetCanvas.getContext("2d");
-
-      if (ctx) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-        const scale = Math.min(
-          targetWidth / canvas.width,
-          targetHeight / canvas.height
-        );
-        const x = (targetWidth - canvas.width * scale) / 2;
-        const y = (targetHeight - canvas.height * scale) / 2;
-
-        ctx.drawImage(
-          canvas,
-          x,
-          y,
-          canvas.width * scale,
-          canvas.height * scale
-        );
-      }
-
-      return targetCanvas.toDataURL("image/png");
+      setPreviewImage(canvas.toDataURL("image/png"));
     }
   };
 
   const copyLinkToClipboard = async () => {
-    const url = window.location.href;
     setCopiedLink(false);
-
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        // For HTTPS sites
-        await navigator.clipboard.writeText(url);
-        setCopiedLink(true);
-      } else {
-        // Fallback for HTTP sites
-        const textArea = document.createElement("textarea");
-        textArea.value = url;
-        textArea.style.position = "fixed";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          setCopiedLink(true);
-        } catch (err) {
-          console.error("Fallback: Oops, unable to copy", err);
-        }
-        document.body.removeChild(textArea);
-      }
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);
+      alert("Failed to copy link. Please try again.");
     }
-
-    // Reset copied state after 2 seconds
-    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleShare = async (platform: string) => {
-    if (platform === "copy") {
-      await copyLinkToClipboard();
-      return;
-    }
     setIsSharing(true);
-    let imageDataUrl;
     try {
+      const title = `${track.name} by ${track.artists
+        .map((a) => a.name)
+        .join(", ")}`;
+      const text = "Check out this track on Sonolise!";
+
       switch (platform) {
         case "instagram":
-          imageDataUrl = await captureImage(1080, 1920);
+        case "twitter":
+        case "facebook":
+        case "linkedin":
+          if (navigator.share) {
+            await navigator.share({ title, text, url: shareUrl });
+          } else {
+            window.open(getShareUrl(platform, title, shareUrl), "_blank");
+          }
           break;
         case "download":
-          imageDataUrl = await captureImage();
+          if (previewImage) {
+            const link = document.createElement("a");
+            link.href = previewImage;
+            link.download = `${track.name.replace(/\s+/g, "_")}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
           break;
-        default:
-          imageDataUrl = await captureImage(1200, 630);
-      }
-
-      if (imageDataUrl) {
-        const blob = await (await fetch(imageDataUrl)).blob();
-        const file = new File(
-          [blob],
-          `${track.name.replace(/\s+/g, "_")}_${track.artists[0].name.replace(
-            /\s+/g,
-            "_"
-          )}.png`,
-          { type: "image/png" }
-        );
-
-        switch (platform) {
-          case "instagram":
-            if (navigator.share) {
-              await navigator.share({
-                files: [file],
-                title: `${track.name} by ${track.artists
-                  .map((a) => a.name)
-                  .join(", ")}`,
-                text: "Check out this track!",
-              });
-            } else {
-              alert(
-                "Image captured for Instagram. Please save and upload manually to Instagram."
-              );
-              // Fallback to download
-              await downloadImage(imageDataUrl, file.name);
-            }
-            break;
-          case "copy":
-            await navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
-            break;
-          case "download":
-            await downloadImage(imageDataUrl, file.name);
-            break;
-        }
       }
     } catch (error) {
       console.error("Error sharing:", error);
@@ -165,83 +110,101 @@ const ShareComponent: React.FC<ShareComponentProps> = ({
     }
   };
 
-  const downloadImage = async (dataUrl: string, fileName: string) => {
-    if (navigator.share) {
-      try {
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], fileName, { type: "image/png" });
-        await navigator.share({
-          files: [file],
-          title: `${track.name} by ${track.artists
-            .map((a) => a.name)
-            .join(", ")}`,
-          text: "Check out this track!",
-        });
-      } catch (error) {
-        console.error("Error sharing:", error);
-        // Fallback to traditional download
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } else {
-      // Traditional download for unsupported browsers
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const getShareUrl = (platform: string, title: string, url: string) => {
+    switch (platform) {
+      case "twitter":
+        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          title
+        )}&url=${encodeURIComponent(url)}`;
+      case "facebook":
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          url
+        )}`;
+      case "linkedin":
+        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+          url
+        )}&title=${encodeURIComponent(title)}`;
+      default:
+        return url;
     }
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="space-x-2 print:hidden">
-          <Share className="h-4 w-4" />
-          <span className="">Share</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48">
-        <div className="grid gap-4">
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleShare("instagram")}
-            disabled={isSharing}
-          >
-            <Instagram className="mr-2 h-4 w-4" />
-            Instagram
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleShare("copy")}
-            disabled={isSharing}
-          >
-            {copiedLink ? (
-              <Check className="mr-2 h-4 w-4 text-green-500" />
-            ) : (
-              <Link className="mr-2 h-4 w-4" />
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setShowShareDialog(true)}
+        className="space-x-2 print:hidden"
+      >
+        <Share className="h-4 w-4" />
+        <span>Share</span>
+      </Button>
+
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Share This Track</DialogTitle>
+            <DialogDescription>
+              Choose a platform to share or copy the link
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4">
+            {previewImage && (
+              <div className="border rounded-md p-2 overflow-hidden">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="w-full h-auto max-h-[200px] object-cover"
+                />
+              </div>
             )}
-            {copiedLink ? "Copied!" : "Copy Link"}
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => handleShare("download")}
-            disabled={isSharing}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+            <div className="grid grid-cols-4 gap-2">
+              {["instagram", "twitter", "facebook", "linkedin"].map(
+                (platform) => (
+                  <Button
+                    key={platform}
+                    variant="outline"
+                    className="p-2 h-auto aspect-square"
+                    onClick={() => handleShare(platform)}
+                    disabled={isSharing}
+                  >
+                    {platform === "instagram" && (
+                      <Instagram className="h-5 w-5" />
+                    )}
+                    {platform === "twitter" && <Twitter className="h-5 w-5" />}
+                    {platform === "facebook" && (
+                      <Facebook className="h-5 w-5" />
+                    )}
+                    {platform === "linkedin" && (
+                      <Linkedin className="h-5 w-5" />
+                    )}
+                  </Button>
+                )
+              )}
+            </div>
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+              <Input value={shareUrl} readOnly className="flex-grow" />
+              <Button
+                onClick={copyLinkToClipboard}
+                disabled={copiedLink}
+                className="w-full sm:w-auto"
+              >
+                {copiedLink ? (
+                  <Check className="h-4 w-4 mr-2" />
+                ) : (
+                  <Link className="h-4 w-4 mr-2" />
+                )}
+                {copiedLink ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+            <Button onClick={() => handleShare("download")} className="w-full">
+              <Download className="mr-2 h-4 w-4" />
+              Download Image
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
